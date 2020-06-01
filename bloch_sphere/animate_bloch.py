@@ -4,6 +4,7 @@ from typing import List
 
 import dataclasses
 import argparse
+import sys
 import numpy as np
 
 import drawSvg as draw  # pip install drawSvg
@@ -122,6 +123,31 @@ class AnimState:
         self.do_gate('S⁻¹ Gate:', (0, 0, 1), -np.pi/2)
     def inv_t_gate(self):
         self.do_gate('T⁻¹ Gate:', (0, 0, 1), -np.pi/4)
+
+    def apply_gate_list(self, gates, final_wait=True):
+        non_gates = {'wait', 'no_wait'}
+        block_gates = {'do'}
+        no_wait = False
+        for gate in gates:
+            gate = gate.replace('-', '_')
+            if gate in block_gates:
+                print(f'Error: Invalid gate name "{gate}".')
+                sys.exit(1)
+                return
+            if gate == 'no_wait':
+                no_wait = True
+            elif gate in non_gates:
+                getattr(self, gate)()
+            else:
+                method = getattr(self, gate+'_gate', None)
+                if method is not None:
+                    method()
+                else:
+                    print(f'Error: Unknown gate name "{gate}".')
+                    sys.exit(1)
+                    return
+        if not no_wait and final_wait:
+            self.wait()
 
 def do_or_save_animation(name: str, save=False, fps=20, preview=True):
     def wrapper(func):
@@ -327,33 +353,11 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
     return d
 
 
-def main(name, gates, mp4=False, fps=20):
+def main(name, gates, mp4=False, fps=20, preview=False):
     save = 'mp4' if mp4 else 'gif'
-    non_gates = {'wait', 'no_wait'}
-    block_gates = {'do'}
-    @do_or_save_animation(name, save=save, fps=fps, preview=False)
+    @do_or_save_animation(name, save=save, fps=fps, preview=preview)
     def animate(state):
-        no_wait = False
-        for gate in gates:
-            gate = gate.replace('-', '_')
-            if gate in block_gates:
-                print(f'Error: Invalid gate name "{gate}".')
-                sys.exit(1)
-                return
-            if gate == 'no_wait':
-                no_wait = True
-            elif gate in non_gates:
-                getattr(state, gate)()
-            else:
-                method = getattr(state, gate+'_gate', None)
-                if method is not None:
-                    method()
-                else:
-                    print(f'Error: Unknown gate name "{gate}".')
-                    sys.exit(1)
-                    return
-        if not no_wait:
-            state.wait()
+        state.apply_gate_list(gates)
     print(f'Saved "{name}.{save}" with gate sequence "{"".join(gates)}"')
 
 def run_from_command_line():

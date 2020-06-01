@@ -3,7 +3,7 @@
 A collection of visualization tools for the qubit Bloch sphere.
 The Bloch sphere is a useful representation of the state of a single-qubit quantum computer.
 
-![Example animated Bloch sphere](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/example0.gif)
+![Example animated Bloch sphere](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/example2.gif)
 
 # Install
 
@@ -38,10 +38,16 @@ brew install cairo
 This package provides a command line tool to generate animations.
 In your shell, run the following (run `animate_bloch -h` for help).
 ```bash
-animate_block hadamard x y s s
+animate_bloch hadamard x y s s
+```
+
+```bash
+animate_bloch2 xy_vs_z x,y z
 ```
 
 # Code Examples
+
+### Visualize a single Bloch sphere
 
 ```python
 from bloch_sphere.animate_bloch import do_or_save_animation, AnimState
@@ -61,3 +67,19 @@ def animate(state: AnimState):
 
 ![Example output animation](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/example1.gif)
 
+
+### Compare two sequences of gates
+
+```python
+from bloch_sphere.animate_bloch_compare import main
+
+main('hzh_x', 'h,z,h'.split(','), 'x'.split(','),
+     r'& \gate{H} & \gate{Z} & \gate{H} & \qw & \push{=} & & \gate{X} & \qw',
+     r'$HZH\ket{\psi}=X\ket{\psi}$',
+     mp4=False,
+     fps=20,
+     preview=True,
+)
+```
+
+![Example output animation](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/example2.gif)

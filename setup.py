@@ -19,6 +19,7 @@ setup(
     entry_points = {
         'console_scripts': [
             'animate_bloch=bloch_sphere.animate_bloch:run_from_command_line',
+            'animate_bloch2=bloch_sphere.animate_bloch_compare:run_from_command_line',
         ]},
     version = version,
     description = 'Visualization tools for the qubit Bloch sphere',
@@ -42,6 +43,7 @@ setup(
         'numpy',
         'drawSvg',
         'hyperbolic',
+        'latextools',
     ],
 )
 
