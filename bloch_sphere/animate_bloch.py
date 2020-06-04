@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import List
+from typing import Any, Dict, List
 
 import dataclasses
 import argparse
@@ -22,6 +22,7 @@ class AnimState:
     extra_opacity: float = 0
     label: str = None
     axis: List[float] = None
+    draw_args: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
     @classmethod
     def _interpolate(cls, x):
@@ -33,20 +34,24 @@ class AnimState:
     def _wait(self, duration):
         return range(int(round(self.fps*duration)))
 
+    def _draw_frame(self):
+            self.anim.draw_frame(self.inner_proj, label=self.label,
+                                 inner_opacity=self.inner_opacity,
+                                 extra_opacity=self.extra_opacity,
+                                 axis=self.axis,
+                                 idPrefix='{}-d'.format(len(self.anim.frames)),
+                                 **self.draw_args)
+
     def sphere_fade_in(self):
         for t in self._smooth(0.4):
-            self.anim.draw_frame(self.inner_proj, label=self.label,
-                                 inner_opacity=t,
-                                 extra_opacity=self.extra_opacity,
-                                 axis=self.axis)
+            self.inner_opacity = t
+            self._draw_frame()
         self.inner_opacity = 1
 
     def sphere_fade_out(self):
         for t in self._smooth(0.4):
-            self.anim.draw_frame(self.inner_proj, label=self.label,
-                                 inner_opacity=1-t,
-                                 extra_opacity=self.extra_opacity,
-                                 axis=self.axis)
+            self.inner_opacity = 1-t
+            self._draw_frame()
         self.inner_opacity = 0
 
     def fade_in(self, label, axis):
@@ -54,34 +59,27 @@ class AnimState:
         self.label = label
         self.axis = axis
         for t in self._smooth(0.4):
-            self.anim.draw_frame(self.inner_proj, label=self.label,
-                                 inner_opacity=self.inner_opacity,
-                                 extra_opacity=t, axis=self.axis)
+            self.extra_opacity = t
+            self._draw_frame()
         self.extra_opacity = 1
 
     def fade_out(self):
         assert self.extra_opacity == 1, 'Unexpected previous state'
         for t in self._smooth(0.4):
-            self.anim.draw_frame(self.inner_proj, label=self.label,
-                                 inner_opacity=self.inner_opacity,
-                                 extra_opacity=1-t, axis=self.axis)
+            self.extra_opacity = 1-t
+            self._draw_frame()
         self.extra_opacity = 0
 
     def rotate(self, rads):
+        start = self.inner_proj
         for t in self._smooth(2):
-            rotation = euclid3d.rotation3d(self.axis, rads*t)
-            self.anim.draw_frame(rotation@self.inner_proj, label=self.label,
-                                 inner_opacity=self.inner_opacity,
-                                 extra_opacity=self.extra_opacity,
-                                 axis=self.axis)
-        self.inner_proj = euclid3d.rotation3d(self.axis, rads) @ self.inner_proj
+            self.inner_proj = euclid3d.rotation3d(self.axis, rads*t) @ start
+            self._draw_frame()
+        self.inner_proj = euclid3d.rotation3d(self.axis, rads) @ start
 
     def wait(self, duration=1):
         for i in self._wait(duration):
-            self.anim.draw_frame(self.inner_proj, label=self.label,
-                                 inner_opacity=self.inner_opacity,
-                                 extra_opacity=self.extra_opacity,
-                                 axis=self.axis)
+            self._draw_frame()
 
     def i_gate(self):
         self.wait(2.8)
@@ -170,9 +168,10 @@ def do_or_save_animation(name: str, save=False, fps=20, preview=True):
         return func
     return wrapper
 
-def draw_frame(*args, background='white', **kwargs):
-    d = draw.Drawing(5, 3, origin='center')
-    d.setRenderSize(624)
+def draw_frame(*args, background='white', idPrefix='d', w=624, h=None,
+               **kwargs):
+    d = draw.Drawing(5, 3, origin='center', idPrefix=idPrefix)
+    d.setRenderSize(w=w, h=h)
     if background:
         d.append(draw.Rectangle(-100, -100, 200, 200, fill=background))
 
@@ -182,8 +181,9 @@ def draw_frame(*args, background='white', **kwargs):
     return d
 
 def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
-                      rot_proj=None, rot_deg=180, extra_opacity=1,
-                      inner_opacity=1, background='white'):
+                      rot_proj=None, rot_deg=180,
+                      outer_labels=(), inner_labels=(),
+                      extra_opacity=1, inner_opacity=1, background='white'):
     spin = euclid3d.rotation(3, 0, 2, 2*np.pi/16/2*1.001)
     tilt = euclid3d.rotation(3, 1, 2, np.pi/8)
     trans = tilt @ spin @ euclid3d.axis_swap((1, 2, 0))
@@ -246,7 +246,8 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
 
     # Inner
     g = draw.Group(opacity=inner_opacity)
-    d.append(g, z=proj.project_point((0,0,0))[2])
+    z_center = trans.project_point((0,0,0))[2]
+    d.append(g, z=z_center)
     inner_xy = proj@inner_proj@xy
     # Darker colors: #34b, #a8a833, #7b2
     draw_band(proj@inner_proj@xy, trans@inner_proj@xy, 0.8, 0.7, color='#45e',
@@ -269,11 +270,17 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
     arrow.append(draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='black',
                             close=True))
     g.append(draw.Line(*inner_xy.p2(-0.65, 0, 0), *inner_xy.p2(0.6, 0, 0),
-                       stroke='black', stroke_width=0.015, marker_end=arrow))
+                       stroke='black', stroke_width=0.015, marker_end=arrow),
+             z=z_center)
     g.append(draw.Line(*inner_xy.p2(0, -0.65, 0), *inner_xy.p2(0, 0.6, 0),
-                       stroke='black', stroke_width=0.015, marker_end=arrow))
+                       stroke='black', stroke_width=0.015, marker_end=arrow),
+             z=z_center)
     g.append(draw.Line(*inner_xy.p2(0, 0, -0.65), *inner_xy.p2(0, 0, 0.6),
-                       stroke='black', stroke_width=0.015, marker_end=arrow))
+                       stroke='black', stroke_width=0.015, marker_end=arrow),
+             z=z_center)
+    for pt, (x_off, y_off), elem in inner_labels:
+        x, y = (proj@inner_proj).p2(*pt)
+        g.append(draw.Use(elem, x+x_off, y+y_off), z=10000)
 
     # Outer arrows and text
     arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=4, orient='auto')
@@ -300,6 +307,9 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
                        fill='black'), z=100)
     d.append(draw.Text(['Z'], 0.2, *proj_xy.p2(0, 0, 1.4), center=True,
                        fill='black'), z=100)
+    for pt, (x_off, y_off), elem in outer_labels:
+        x, y = proj.p2(*pt)
+        d.append(draw.Use(elem, x+x_off, y+y_off), z=10000)
 
     # Extra annotations
     #label='', axis=None, rot_proj=None

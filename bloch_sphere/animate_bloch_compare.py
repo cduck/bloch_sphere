@@ -8,18 +8,18 @@ from bloch_sphere import animate_bloch
 
 
 def render_animation(name, func1, func2, circuit_qcircuit='', equation_latex='',
-                     save=False, fps=20, preview=True):
+                     save=False, fps=20, preview=True, **kwargs):
     with draw.animation.AnimationContext(animate_bloch.draw_frame,
                                          jupyter=preview, delay=0
                                         ) as anim:
-        state = animate_bloch.AnimState(anim)
+        state = animate_bloch.AnimState(anim, fps=fps)
         func1(state)
     frames1 = anim.frames
 
     with draw.animation.AnimationContext(animate_bloch.draw_frame,
                                          jupyter=preview, delay=0
                                         ) as anim:
-        state = animate_bloch.AnimState(anim)
+        state = animate_bloch.AnimState(anim, fps=fps)
         func2(state)
     frames2 = anim.frames
 
@@ -36,8 +36,8 @@ def render_animation(name, func1, func2, circuit_qcircuit='', equation_latex='',
         g.draw(equation_elem, x=0, y=-0.8, center=True, scale=0.03)
     extra_elements = (g,)
 
-    save_side_by_side(name, frames1, frames2, extra_elements, save=save,
-                      fps=fps, preview=preview)
+    save_side_by_side(name, frames1, frames2, extra_elements=extra_elements,
+                      save=save, fps=fps, preview=preview, **kwargs)
 
 def zip_pad(*iterables):
     '''Same as the builtin zip but pads shorter iterables with their last
@@ -61,22 +61,23 @@ def zip_pad(*iterables):
         yield values
 
 def save_side_by_side(name: str, frames1, frames2, extra_elements=(),
-                      save=False, fps=20, preview=True):
+                      save=False, fps=20, preview=True, **kwargs):
     with draw.animation.AnimationContext(draw_whole_frame,
                                          jupyter=not save or preview,
                                          delay=0 if save else 1/fps
                                         ) as anim:
         for f1, f2 in zip_pad(frames1, frames2):
             anim.draw_frame(f1, f2, background='white',
-                            extra_elements=extra_elements)
+                            extra_elements=extra_elements, **kwargs)
     if save == 'mp4':
         anim.save_video(f'{name}.mp4', fps=fps)
     elif save == 'gif' or save is True:
         anim.save_video(f'{name}.gif', duration=1/fps)
 
-def draw_whole_frame(f1, f2, background='white', extra_elements=()):
+def draw_whole_frame(f1, f2, background='white', w=624*2, h=None,
+                     extra_elements=()):
     d = draw.Drawing(10, 4, origin=(-5, -1.5))
-    d.setRenderSize(624*2)
+    d.setRenderSize(w=w, h=h)
     if background:
         d.append(draw.Rectangle(-100, -100, 200, 200, fill=background))
 
