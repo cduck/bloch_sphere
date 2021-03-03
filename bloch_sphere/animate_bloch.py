@@ -200,6 +200,7 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
 
     def draw_band(proj, trans, r_outer=1, r_inner=0.9, color='black', z_mul=1,
                   opacity=1, divs=4, d=d, **kwargs):
+        color = (color * divs)[:divs] if isinstance(color, list) else [color] * divs
         points = np.array([[-1, -1, 1, 1], [-1, 1, 1, -1]]).T
         sqr12 = 0.5**0.5
         overlap = np.pi/500 * (divs != 4)
@@ -211,7 +212,7 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
             for pr in np.linspace(0, 2*np.pi, num=divs, endpoint=False)
         ]
         for i in range(divs):
-            p = draw.Path(fill=color, stroke='none', stroke_width=0.002,
+            p = draw.Path(fill=color[i], stroke='none', stroke_width=0.002,
                           **kwargs, opacity=opacity)
             z = trans.project_point(
                 (r_inner+r_outer)/2*start_end_points[i][2])[2]
@@ -237,12 +238,16 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
                                       )[:, :2].flatten(),
                     *proj.project_list((r_outer+r_inner)/2*start_end_points[i]
                                       )[:, :2].flatten(),
-                ), fill='none', stroke_width=0.02, stroke=color, **kwargs,
+                ), fill='none', stroke_width=0.02, stroke=color[i], **kwargs,
                 z=z*z_mul)
 
-    draw_band(proj_xy, trans@xy, 1, 0.925, z_mul=10, color='#45e')
-    draw_band(proj_yz, trans@yz, 1, 0.925, z_mul=10, color='#e1e144')
-    draw_band(proj_zx, trans@zx, 1, 0.925, z_mul=10, color='#9e2')
+    xycolors = ['#56e', '#239', '#56e', '#56e', ]
+    yzcolors = ['#e1e144', '#909022', '#e1e144', '#e1e144', ]
+    zxcolors = ['#9e2', '#6a1', '#9e2', '#9e2', ]
+
+    draw_band(proj_xy, trans@xy, 1, 0.925, z_mul=10, color=xycolors)
+    draw_band(proj_yz, trans@yz, 1, 0.925, z_mul=10, color=yzcolors)
+    draw_band(proj_zx, trans@zx, 1, 0.925, z_mul=10, color=zxcolors)
 
     # Inner
     g = draw.Group(opacity=inner_opacity)
@@ -250,11 +255,11 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
     d.append(g, z=z_center)
     inner_xy = proj@inner_proj@xy
     # Darker colors: #34b, #a8a833, #7b2
-    draw_band(proj@inner_proj@xy, trans@inner_proj@xy, 0.8, 0.7, color='#45e',
+    draw_band(proj@inner_proj@xy, trans@inner_proj@xy, 0.8, 0.7, color=xycolors,
               d=g)
     draw_band(proj@inner_proj@yz, trans@inner_proj@yz, 0.8, 0.7,
-              color='#e1e144', divs=4, d=g)
-    draw_band(proj@inner_proj@zx, trans@inner_proj@zx, 0.8, 0.7, color='#9e2',
+              color=yzcolors, divs=4, d=g)
+    draw_band(proj@inner_proj@zx, trans@inner_proj@zx, 0.8, 0.7, color=zxcolors,
               divs=8//2, d=g)
     elevation_lines = False
     if elevation_lines:
