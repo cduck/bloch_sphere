@@ -241,9 +241,9 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
                 ), fill='none', stroke_width=0.02, stroke=color[i], **kwargs,
                 z=z*z_mul)
 
-    xycolors = ['#56e', '#239', '#56e', '#56e', ]
-    yzcolors = ['#e1e144', '#909022', '#e1e144', '#e1e144', ]
-    zxcolors = ['#9e2', '#6a1', '#9e2', '#9e2', ]
+    xycolors = ['#56e', '#239', '#56e', '#56e']
+    yzcolors = ['#e1e144', '#909022', '#e1e144', '#e1e144']
+    zxcolors = ['#9e2', '#6a1', '#9e2', '#9e2']
 
     draw_band(proj_xy, trans@xy, 1, 0.925, z_mul=10, color=xycolors)
     draw_band(proj_yz, trans@yz, 1, 0.925, z_mul=10, color=yzcolors)
