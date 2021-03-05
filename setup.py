@@ -4,7 +4,7 @@ logger = logging.getLogger(__name__)
 
 name = 'bloch_sphere'
 package_name = 'bloch_sphere'
-version = '0.1.1'
+version = '0.2.0'
 
 try:
     with open('README.md', 'r') as f:
