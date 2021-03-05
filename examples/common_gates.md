@@ -8,6 +8,10 @@
 
 ![Z gate](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/zz_gate.gif)
 
+### Y gate (bit and phase flip)
+
+![Y gate](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/yy_gate.gif)
+
 ### Hadamard gate (Z/X axis swap)
 
 ![Hadamard gate](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/hh_gate.gif)
