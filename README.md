@@ -7,6 +7,8 @@ The Bloch sphere is a useful representation of the state of a single-qubit quant
 
 * [Animations for many common gates](https://github.com/cduck/bloch_sphere/blob/master/examples/common_gates.md)
 
+See also: [Feynman path integral visualization](https://github.com/cduck/feynman_path)
+
 # Install
 
 bloch\_sphere is available on PyPI:
