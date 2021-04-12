@@ -49,6 +49,21 @@ animate_bloch hadamard x y s s
 animate_bloch2 xy_vs_z x,y z
 ```
 
+With annotations:
+```bash
+animate_bloch2 xy_vs_z_annotated \
+    x,y z \
+    --circuit '& \gate{X} & \gate{Y} & \qw & \push{=} & & \gate{Z} & \qw' \
+    --equation '$YX\ket{\psi}=Z\ket{\psi}$' \
+    --fps 20 \
+    --mp4
+```
+
+Custom gates: `custom;<x-axis>;<y-axis>;<z-axis>;<number half rotations>;<label>`
+```bash
+animate_bloch2 custom_hzy "custom;0;1;1;1;Hzy" "s,h,inv_s"
+```
+
 # Code Examples
 
 ### Visualize a single Bloch sphere

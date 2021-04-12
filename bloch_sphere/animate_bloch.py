@@ -121,12 +121,27 @@ class AnimState:
         self.do_gate('S⁻¹ Gate:', (0, 0, 1), -np.pi/2)
     def inv_t_gate(self):
         self.do_gate('T⁻¹ Gate:', (0, 0, 1), -np.pi/4)
+    def custom_gate(self, x, y, z, r_pi=1, label=None):
+        x = float(x)
+        y = float(y)
+        z = float(z)
+        r_pi = float(r_pi)
+        if label is None:
+            label = f'{r_pi:.3f}π about ({x:.3f}, {y:.3f}, {z:.3f})'
+        self.do_gate(label, (x, y, z), np.pi*r_pi)
 
     def apply_gate_list(self, gates, final_wait=True):
         non_gates = {'wait', 'no_wait'}
         block_gates = {'do'}
         no_wait = False
         for gate in gates:
+            if gate.startswith('custom,') or gate.startswith('custom;'):
+                try:
+                    self.custom_gate(*gate[7:].split(gate[6]))
+                except ValueError:
+                    print(f'Error: Custom gate arguments contain invalid '
+                          f'floats {gate}.')
+                continue
             gate = gate.replace('-', '_')
             if gate in block_gates:
                 print(f'Error: Invalid gate name "{gate}".')
