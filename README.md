@@ -168,3 +168,10 @@ render_animation('hzh_x_compare', func1, func2,
 ```
 
 ![Example output animation](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/hzh_x_compare.gif)
+
+### Synthesize any gate as Rz, Rx, Rz
+
+Any single-qubit gate can be decomposed into a series of three rotations about fixed axes, most commonly as rotations about Z, X, and Z.
+See [the example code](https://github.com/cduck/bloch_sphere/blob/master/examples/synthesize_from_rz_rx_rz.py) that generated the below animation.
+
+![Example output animation](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/random_as_zxz.gif)
