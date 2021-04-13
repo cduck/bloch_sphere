@@ -61,3 +61,54 @@ main('random_as_zxz',
      fps=20,
      preview=False,
 )
+
+
+################################################################################
+### Now synthesize an alternative with only parameterized Rz gates and fixed Rx
+### Rz, Rx(π/2), Rz, Rx(π/2), Rz
+
+z_angles = angles.copy()
+# Convert back to Rz, Ry, Rz
+z_angles[0] += np.pi/2
+z_angles[2] -= np.pi/2
+# Turn the Ry into Rx(π/2), Rz, Rx(π/2)
+z_angles[0] += np.pi
+z_angles[1] = np.pi - z_angles[1]
+# Restrict angles to [-pi, +pi)
+z_angles = (z_angles + np.pi) % (2*np.pi) - np.pi
+
+# Show the circuit
+q = cirq.LineQubit(0)
+z_circuit = cirq.Circuit(
+    cirq.rz(z_angles[0])(q),
+    cirq.rx(np.pi/2)(q),
+    cirq.rz(z_angles[1])(q),
+    cirq.rx(np.pi/2)(q),
+    cirq.rz(z_angles[2])(q),
+)
+print(z_circuit)
+#     0: ───Rz(-0.371π)───Rx(0.5π)───Rz(0.265π)───Rx(0.5π)───Rz(0.099π)───
+
+# Check circuit
+assert cirq.equal_up_to_global_phase(u, cirq.unitary(z_circuit))
+
+# Generate animation
+main('random_as_zxzxz',
+     # Left gate
+     [f'custom;{axis_angle.axis[0]};{axis_angle.axis[1]};'
+      f'{axis_angle.axis[2]};{axis_angle.angle/np.pi};Random'],
+     # Right gates
+     [f'custom;0;0;1;{z_angles[0]/np.pi};Rz({z_angles[0]/np.pi:.3f}π)',
+      f'custom;1;0;0;0.5;Rx(π/2)',
+      f'custom;0;0;1;{z_angles[1]/np.pi};Rz({z_angles[1]/np.pi:.3f}π)',
+      f'custom;1;0;0;0.5;Rx(π/2)',
+      f'custom;0;0;1;{z_angles[2]/np.pi};Rz({z_angles[2]/np.pi:.3f}π)'],
+     # Circuit diagram
+     r'& \gate{U} & \qw & \push{=} & & \gate{R_Z} & \gate{\sqrt{X}} & \gate{R_Z} & \gate{\sqrt{X}} & \gate{R_Z} & '
+     r'\qw',
+     # Circuit equation
+     #r'$U\ket{\psi}=R_Z R_X R_Z\ket{\psi}$',
+     mp4=False,
+     fps=20,
+     preview=False,
+)

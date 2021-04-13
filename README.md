@@ -175,3 +175,10 @@ Any single-qubit gate can be decomposed into a series of three rotations about f
 See [the example code](https://github.com/cduck/bloch_sphere/blob/master/examples/synthesize_from_rz_rx_rz.py) that generated the below animation.
 
 ![Example output animation](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/random_as_zxz.gif)
+
+### Synthesize any gate as Rz, Rx(π/2), Rz, Rx(π/2), Rz
+
+Any single-qubit gate can also be decomposed into a series of three Z rotations with fixed X rotations of π/2 (1/4 turn) in between.
+See [the example code](https://github.com/cduck/bloch_sphere/blob/master/examples/synthesize_from_rz_rx_rz.py) that generated the below animation.
+
+![Example output animation](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/random_as_zxzxz.gif)
