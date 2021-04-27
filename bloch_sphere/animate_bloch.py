@@ -4,6 +4,7 @@ from typing import Any, Dict, List
 
 import dataclasses
 import argparse
+import re
 import sys
 import numpy as np
 
@@ -141,6 +142,15 @@ class AnimState:
                 except ValueError:
                     print(f'Error: Custom gate arguments contain invalid '
                           f'floats {gate}.')
+                continue
+            if re.match('R[x,y,z][,;]', gate[:3]):
+                try:
+                    x, y, z = gate[1] == 'x', gate[1] == 'y', gate[1] == 'z' 
+                    r_pi = float(gate[3:])
+                    label = f"{gate[:2]}({r_pi:.3f}".rstrip('0').rstrip('.') + ")"
+                    self.custom_gate(x, y, z, r_pi, label=label)
+                except ValueError:
+                    print('Error: Rx/Ry/Rz gate should have style like Rx;{float} or Rx,{float}.')
                 continue
             gate = gate.replace('-', '_')
             if gate in block_gates:
