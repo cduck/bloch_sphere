@@ -153,7 +153,7 @@ class AnimState:
                 gate_name = 'R' + gate[1].lower()  # Display Rx instead of rx
                 x = int(gate_name[1] == 'x')
                 y = int(gate_name[1] == 'y')
-                z = int(gate_name[1] == 'z') 
+                z = int(gate_name[1] == 'z')
                 formated_r_pi = f"{r_pi:.3f}".rstrip('0').rstrip('.')
                 label = f"{gate_name}({formated_r_pi}π)"
                 self.custom_gate(x, y, z, r_pi, label=label)
