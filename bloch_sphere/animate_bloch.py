@@ -150,7 +150,7 @@ class AnimState:
                 except ValueError:
                     print('Error: Rx/Ry/Rz gate should have style like '
                           'Rx;{float} or Rx,{float}.')
-                gate_name = gate[:3].lower()
+                gate_name = 'R' + gate[1].lower()  # Display Rx instead of rx
                 x = int(gate_name[1] == 'x')
                 y = int(gate_name[1] == 'y')
                 z = int(gate_name[1] == 'z') 
