@@ -8,18 +8,18 @@ from bloch_sphere import animate_bloch
 
 
 def render_animation(name, func1, func2, circuit_qcircuit='', equation_latex='',
-                     save=False, fps=20, preview=True, **kwargs):
+                     save=False, fps=20, preview=True, style=None, **kwargs):
     with draw.animation.AnimationContext(animate_bloch.draw_frame,
                                          jupyter=preview, delay=0
                                         ) as anim:
-        state = animate_bloch.AnimState(anim, fps=fps)
+        state = animate_bloch.AnimState(anim, fps=fps, draw_args={"style": style})
         func1(state)
     frames1 = anim.frames
 
     with draw.animation.AnimationContext(animate_bloch.draw_frame,
                                          jupyter=preview, delay=0
                                         ) as anim:
-        state = animate_bloch.AnimState(anim, fps=fps)
+        state = animate_bloch.AnimState(anim, fps=fps, draw_args={"style": style})
         func2(state)
     frames2 = anim.frames
 
@@ -88,7 +88,7 @@ def draw_whole_frame(f1, f2, background='white', w=624*2, h=None,
     return d
 
 def main(name, gates1, gates2, circuit_qcircuit='', equation_latex='',
-         mp4=False, fps=20, preview=False):
+         mp4=False, fps=20, preview=False, style=None):
     save = 'mp4' if mp4 else 'gif'
     def func1(state):
         state.sphere_fade_in()
@@ -111,7 +111,7 @@ def main(name, gates1, gates2, circuit_qcircuit='', equation_latex='',
         state.sphere_fade_out()
         state.wait()
     render_animation(name, func1, func2, circuit_qcircuit, equation_latex,
-                     save=save, fps=fps, preview=preview)
+                     save=save, fps=fps, preview=preview, style=style)
     print(f'Saved "{name}.{save}"')
 
 def run_from_command_line():
@@ -132,11 +132,13 @@ def run_from_command_line():
         'Save an mp4 video instead of a GIF')
     parser.add_argument('--fps', type=float, default=20, help=
         'Sets the animation frame rate')
+    parser.add_argument('--arrow-style', action="store_true", dest="arrow_style", help=
+        'If set true, plot arrowed axis instead of inner bands.')
     args = parser.parse_args()
     main(name=args.name, gates1=args.gates1.split(','),
          gates2=args.gates2.split(','),
          circuit_qcircuit=args.circuit, equation_latex=args.equation,
-         mp4=args.mp4, fps=args.fps)
+         mp4=args.mp4, fps=args.fps, style={'arrow_style': args.arrow_style})
 
 if __name__ == '__main__':
     run_from_command_line()

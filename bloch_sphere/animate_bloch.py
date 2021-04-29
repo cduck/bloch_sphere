@@ -162,23 +162,23 @@ class AnimState:
         if not no_wait and final_wait:
             self.wait()
 
-def do_or_save_animation(name: str, save=False, fps=20, preview=True):
+def do_or_save_animation(name: str, save=False, fps=20, preview=True, style=None):
     def wrapper(func):
         if save == 'mp4':
             with draw.animate_video(f'{name}.mp4', draw_frame, fps=fps,
                                     jupyter=preview,
                                    ) as anim:
-                state = AnimState(anim, fps=fps)
+                state = AnimState(anim, fps=fps, draw_args={"style": style})
                 func(state)
         elif save == 'gif' or save is True:
             with draw.animate_video(f'{name}.gif', draw_frame, duration=1/fps,
                                     jupyter=preview,
                                    ) as anim:
-                state = AnimState(anim, fps=fps)
+                state = AnimState(anim, fps=fps, draw_args={"style": style})
                 func(state)
         else:
             with draw.animate_jupyter(draw_frame, delay=1/fps) as anim:
-                state = AnimState(anim, fps=fps)
+                state = AnimState(anim, fps=fps, draw_args={"style": style})
                 func(state)
         return func
     return wrapper
@@ -198,7 +198,8 @@ def draw_frame(*args, background='white', idPrefix='d', w=624, h=None,
 def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
                       rot_proj=None, rot_deg=180,
                       outer_labels=(), inner_labels=(),
-                      extra_opacity=1, inner_opacity=1, background='white'):
+                      extra_opacity=1, inner_opacity=1, background='white',
+                      style=None):
     spin = euclid3d.rotation(3, 0, 2, 2*np.pi/16/2*1.001)
     tilt = euclid3d.rotation(3, 1, 2, np.pi/8)
     trans = tilt @ spin @ euclid3d.axis_swap((1, 2, 0))
@@ -269,13 +270,53 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
     z_center = trans.project_point((0,0,0))[2]
     d.append(g, z=z_center)
     inner_xy = proj@inner_proj@xy
-    # Darker colors: #34b, #a8a833, #7b2
-    draw_band(proj@inner_proj@xy, trans@inner_proj@xy, 0.8, 0.7, color=xycolors,
-              d=g)
-    draw_band(proj@inner_proj@yz, trans@inner_proj@yz, 0.8, 0.7,
-              color=yzcolors, divs=4, d=g)
-    draw_band(proj@inner_proj@zx, trans@inner_proj@zx, 0.8, 0.7, color=zxcolors,
-              divs=8//2, d=g)
+
+    if style.get('arrow_style', False):
+        # Draw arrowed axis. (Positive half only)
+        arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=4, orient='auto')
+        arrow.append(draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='#9e2',
+                                close=True))
+        g.append(draw.Line(*inner_xy.p2(0, 0, 0), *inner_xy.p2(0.6, 0, 0),
+                        stroke='#9e2', stroke_width=0.035, marker_end=arrow),
+                z=z_center)
+        arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=4, orient='auto')
+        arrow.append(draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='#e1e144',
+                                close=True))
+        g.append(draw.Line(*inner_xy.p2(0, 0, 0), *inner_xy.p2(0, 0.6, 0),
+                        stroke='#e1e144', stroke_width=0.035, marker_end=arrow),
+                z=z_center)
+        arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=4, orient='auto')
+        arrow.append(draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='#56e',
+                                close=True))
+        g.append(draw.Line(*inner_xy.p2(0, 0, 0), *inner_xy.p2(0, 0, 0.6),
+                        stroke='#56e', stroke_width=0.035, marker_end=arrow),
+                z=z_center)
+    else:
+        # Draw inner bands
+        # Darker colors: #34b, #a8a833, #7b2
+        draw_band(proj@inner_proj@xy, trans@inner_proj@xy, 0.8, 0.7, color=xycolors,
+                d=g)
+        draw_band(proj@inner_proj@yz, trans@inner_proj@yz, 0.8, 0.7,
+                color=yzcolors, divs=4, d=g)
+        draw_band(proj@inner_proj@zx, trans@inner_proj@zx, 0.8, 0.7, color=zxcolors,
+                divs=8//2, d=g)
+        arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=4, orient='auto')
+        arrow.append(draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='black',
+                                close=True))
+        g.append(draw.Line(*inner_xy.p2(-0.65, 0, 0), *inner_xy.p2(0.6, 0, 0),
+                        stroke='black', stroke_width=0.015, marker_end=arrow),
+                z=z_center)
+        g.append(draw.Line(*inner_xy.p2(0, -0.65, 0), *inner_xy.p2(0, 0.6, 0),
+                        stroke='black', stroke_width=0.015, marker_end=arrow),
+                z=z_center)
+        g.append(draw.Line(*inner_xy.p2(0, 0, -0.65), *inner_xy.p2(0, 0, 0.6),
+                        stroke='black', stroke_width=0.015, marker_end=arrow),
+                z=z_center)
+        for pt, (x_off, y_off), elem in inner_labels:
+            x, y = (proj@inner_proj).p2(*pt)
+            g.append(draw.Use(elem, x+x_off, y+y_off), z=10000)
+            
+    
     elevation_lines = False
     if elevation_lines:
         for elevation in (*np.linspace(0, np.pi/2, 4, True)[1:-1],
@@ -286,21 +327,6 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
                       trans@inner_proj@xy @ euclid3d.translation((0, 0, y)),
                       r_outer=r-0.01, r_inner=r+0.01, color='#bbb', opacity=1,
                       d=g)
-    arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=4, orient='auto')
-    arrow.append(draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='black',
-                            close=True))
-    g.append(draw.Line(*inner_xy.p2(-0.65, 0, 0), *inner_xy.p2(0.6, 0, 0),
-                       stroke='black', stroke_width=0.015, marker_end=arrow),
-             z=z_center)
-    g.append(draw.Line(*inner_xy.p2(0, -0.65, 0), *inner_xy.p2(0, 0.6, 0),
-                       stroke='black', stroke_width=0.015, marker_end=arrow),
-             z=z_center)
-    g.append(draw.Line(*inner_xy.p2(0, 0, -0.65), *inner_xy.p2(0, 0, 0.6),
-                       stroke='black', stroke_width=0.015, marker_end=arrow),
-             z=z_center)
-    for pt, (x_off, y_off), elem in inner_labels:
-        x, y = (proj@inner_proj).p2(*pt)
-        g.append(draw.Use(elem, x+x_off, y+y_off), z=10000)
 
     # Outer arrows and text
     arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=4, orient='auto')
@@ -383,9 +409,9 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
     return d
 
 
-def main(name, gates, mp4=False, fps=20, preview=False):
+def main(name, gates, mp4=False, fps=20, preview=False, style=None):
     save = 'mp4' if mp4 else 'gif'
-    @do_or_save_animation(name, save=save, fps=fps, preview=preview)
+    @do_or_save_animation(name, save=save, fps=fps, preview=preview, style=style)
     def animate(state):
         state.apply_gate_list(gates)
     print(f'Saved "{name}.{save}" with gate sequence "{"".join(gates)}"')
@@ -402,8 +428,11 @@ def run_from_command_line():
         'Save an mp4 video instead of a GIF')
     parser.add_argument('--fps', type=float, default=20, help=
         'Sets the animation frame rate')
+    parser.add_argument('--arrow-style', action="store_true", dest="arrow_style", help=
+        'If set true, plot arrowed axis instead of inner bands.')
     args = parser.parse_args()
-    main(name=args.name, gates=args.gate, mp4=args.mp4, fps=args.fps)
+    main(name=args.name, gates=args.gate, mp4=args.mp4, fps=args.fps,
+         style={'arrow_style': args.arrow_style})
 
 if __name__ == '__main__':
     run_from_command_line()
