@@ -8,7 +8,7 @@ from bloch_sphere import animate_bloch
 
 
 def render_animation(name, func1, func2, circuit_qcircuit='', equation_latex='',
-                     save=False, fps=20, preview=True, style=None, **kwargs):
+                     save=False, fps=20, preview=True, style='sphere', **kwargs):
     with draw.animation.AnimationContext(animate_bloch.draw_frame,
                                          jupyter=preview, delay=0
                                         ) as anim:
@@ -88,7 +88,7 @@ def draw_whole_frame(f1, f2, background='white', w=624*2, h=None,
     return d
 
 def main(name, gates1, gates2, circuit_qcircuit='', equation_latex='',
-         mp4=False, fps=20, preview=False, style=None):
+         mp4=False, fps=20, preview=False, style='sphere'):
     save = 'mp4' if mp4 else 'gif'
     def func1(state):
         state.sphere_fade_in()
@@ -132,13 +132,14 @@ def run_from_command_line():
         'Save an mp4 video instead of a GIF')
     parser.add_argument('--fps', type=float, default=20, help=
         'Sets the animation frame rate')
-    parser.add_argument('--arrow-style', action="store_true", dest="arrow_style", help=
-        'If set true, plot arrowed axis instead of inner bands.')
+    parser.add_argument('--style', type=str, choices=['sphere', 'arrows'], 
+        default='sphere', help='Different style of showing rotated bloch sphere. '
+        'Supported options are [sphere, arrows].')
     args = parser.parse_args()
     main(name=args.name, gates1=args.gates1.split(','),
          gates2=args.gates2.split(','),
          circuit_qcircuit=args.circuit, equation_latex=args.equation,
-         mp4=args.mp4, fps=args.fps, style={'arrow_style': args.arrow_style})
+         mp4=args.mp4, fps=args.fps, style=args.arrow_style)
 
 if __name__ == '__main__':
     run_from_command_line()

@@ -179,7 +179,7 @@ class AnimState:
         if not no_wait and final_wait:
             self.wait()
 
-def do_or_save_animation(name: str, save=False, fps=20, preview=True, style=None):
+def do_or_save_animation(name: str, save=False, fps=20, preview=True, style='sphere'):
     def wrapper(func):
         if save == 'mp4':
             with draw.animate_video(f'{name}.mp4', draw_frame, fps=fps,
@@ -216,7 +216,7 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
                       rot_proj=None, rot_deg=180,
                       outer_labels=(), inner_labels=(),
                       extra_opacity=1, inner_opacity=1, background='white',
-                      style=None):
+                      style='sphere'):
     spin = euclid3d.rotation(3, 0, 2, 2*np.pi/16/2*1.001)
     tilt = euclid3d.rotation(3, 1, 2, np.pi/8)
     trans = tilt @ spin @ euclid3d.axis_swap((1, 2, 0))
@@ -288,7 +288,7 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
     d.append(g, z=z_center)
     inner_xy = proj@inner_proj@xy
 
-    if style.get('arrow_style', False):
+    if style == 'arrows':
         # Draw arrowed axis. (Positive half only)
         arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=4, orient='auto')
         arrow.append(draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='#9e2',
@@ -426,7 +426,7 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
     return d
 
 
-def main(name, gates, mp4=False, fps=20, preview=False, style=None):
+def main(name, gates, mp4=False, fps=20, preview=False, style='sphere'):
     save = 'mp4' if mp4 else 'gif'
     @do_or_save_animation(name, save=save, fps=fps, preview=preview, style=style)
     def animate(state):
@@ -445,11 +445,12 @@ def run_from_command_line():
         'Save an mp4 video instead of a GIF')
     parser.add_argument('--fps', type=float, default=20, help=
         'Sets the animation frame rate')
-    parser.add_argument('--arrow-style', action="store_true", dest="arrow_style", help=
-        'If set true, plot arrowed axis instead of inner bands.')
+    parser.add_argument('--style', type=str, choices=['sphere', 'arrows'], 
+        default='sphere', help='Different style of showing rotated bloch sphere. '
+        'Supported options are [sphere, arrows].')
     args = parser.parse_args()
     main(name=args.name, gates=args.gate, mp4=args.mp4, fps=args.fps,
-         style={'arrow_style': args.arrow_style})
+         style=args.style)
 
 if __name__ == '__main__':
     run_from_command_line()
