@@ -142,6 +142,8 @@ class AnimState:
                 except ValueError:
                     print(f'Error: Custom gate arguments contain invalid '
                           f'floats {gate}.')
+                    sys.exit(1)
+                    return
                 continue
 
             if re.match('r[x,y,z][,;]', gate[:3].lower()):
@@ -150,6 +152,8 @@ class AnimState:
                 except ValueError:
                     print('Error: Rx/Ry/Rz gate should have style like '
                           'Rx;{float} or Rx,{float}.')
+                    sys.exit(1)
+                    return
                 gate_name = 'R' + gate[1].lower()  # Display Rx instead of rx
                 x = int(gate_name[1] == 'x')
                 y = int(gate_name[1] == 'y')
