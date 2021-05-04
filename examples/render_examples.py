@@ -41,13 +41,13 @@ def gate_sequence(gates, compared_to_gates=None, first_sequence=True,
         compared_to_gates = tuple(compared_to_gates)
 
     def regular_func(state):
-        state.draw_args = dict(draw_args)
+        state.draw_args = dict(draw_args, **state.draw_args)
         if not show_inner_labels:
             state.draw_args['inner_labels'] = []
         state.apply_gate_list(gates)
 
     def comparison_func(state):
-        state.draw_args = dict(draw_args)
+        state.draw_args = dict(draw_args, **state.draw_args)
         if not show_inner_labels:
             state.draw_args['inner_labels'] = []
         state.sphere_fade_in()
@@ -80,6 +80,12 @@ render_animation('hzh_x_compare',
                  preview=False,
                  fps=fps,
                  w=w)
+
+print('Rendering ry_gate_arrows')
+#$ animate_bloch ry_gate_arrows --style arrows ry,0.666667 ry,0.666667 ry,0.666667
+do_or_save_animation('ry_gate_arrows', save='gif', fps=fps, preview=False,
+                     style='arrows'
+        )(gate_sequence('ry;0.666667,ry;0.666667,ry;0.666667'))
 
 print('Rendering xyss_gate')
 #$ animate_bloch xyss_gate x y s s
