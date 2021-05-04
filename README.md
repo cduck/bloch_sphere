@@ -64,7 +64,7 @@ Custom gates: `custom;<x-axis>;<y-axis>;<z-axis>;<number half rotations>;<label>
 animate_bloch2 custom_hzy "custom;0;1;1;1;Hzy" "s,h,inv_s"
 ```
 
-Alternate drawing styles
+Alternate drawing styles:
 ```bash
 animate_bloch ry_gate_arrows --style arrows ry,0.666667 ry,0.666667 ry,0.666667
 ```
