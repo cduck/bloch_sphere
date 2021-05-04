@@ -445,9 +445,9 @@ def run_from_command_line():
         'Save an mp4 video instead of a GIF')
     parser.add_argument('--fps', type=float, default=20, help=
         'Sets the animation frame rate')
-    parser.add_argument('--style', type=str, choices=['sphere', 'arrows'], 
-        default='sphere', help='Different style of showing rotated bloch sphere. '
-        'Supported options are [sphere, arrows].')
+    parser.add_argument('--style', type=str, choices=['sphere', 'arrows'],
+        default='sphere', help='The style to draw the Bloch sphere. E.g. '
+        'draw the whole sphere or just draw the axis arrows.')
     args = parser.parse_args()
     main(name=args.name, gates=args.gate, mp4=args.mp4, fps=args.fps,
          style=args.style)
