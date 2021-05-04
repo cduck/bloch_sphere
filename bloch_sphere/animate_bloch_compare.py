@@ -8,18 +8,21 @@ from bloch_sphere import animate_bloch
 
 
 def render_animation(name, func1, func2, circuit_qcircuit='', equation_latex='',
-                     save=False, fps=20, preview=True, style='sphere', **kwargs):
+                     save=False, fps=20, preview=True, style='sphere',
+                     **kwargs):
     with draw.animation.AnimationContext(animate_bloch.draw_frame,
                                          jupyter=preview, delay=0
                                         ) as anim:
-        state = animate_bloch.AnimState(anim, fps=fps, draw_args={"style": style})
+        state = animate_bloch.AnimState(
+                anim, fps=fps, draw_args={"style": style})
         func1(state)
     frames1 = anim.frames
 
     with draw.animation.AnimationContext(animate_bloch.draw_frame,
                                          jupyter=preview, delay=0
                                         ) as anim:
-        state = animate_bloch.AnimState(anim, fps=fps, draw_args={"style": style})
+        state = animate_bloch.AnimState(
+                anim, fps=fps, draw_args={"style": style})
         func2(state)
     frames2 = anim.frames
 
@@ -125,7 +128,8 @@ def run_from_command_line():
     parser.add_argument('gates2', type=str, help=
         'List of gates to apply on the right (e.g. h,x,wait,inv_sqrt_y,...)')
     parser.add_argument('--circuit', type=str, help=
-        r'Latex code for a qcircuit digram (e.g. \'& \gate{Y} & \gate{Z} & \qw & \push{=} & & \gate{X} & \qw\'')
+        r'Latex code for a qcircuit digram (e.g. \'& \gate{Y} & \gate{Z} & \qw '
+        r'& \push{=} & & \gate{X} & \qw\'')
     parser.add_argument('--equation', type=str, help=
         r'Latex code for an equation (e.g. \'$ZY\ket{\psi}=X\ket{\psi}$\'')
     parser.add_argument('--mp4', action='store_true', help=

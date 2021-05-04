@@ -36,12 +36,12 @@ class AnimState:
         return range(int(round(self.fps*duration)))
 
     def _draw_frame(self):
-            self.anim.draw_frame(self.inner_proj, label=self.label,
-                                 inner_opacity=self.inner_opacity,
-                                 extra_opacity=self.extra_opacity,
-                                 axis=self.axis,
-                                 idPrefix='{}-d'.format(len(self.anim.frames)),
-                                 **self.draw_args)
+        self.anim.draw_frame(self.inner_proj, label=self.label,
+                             inner_opacity=self.inner_opacity,
+                             extra_opacity=self.extra_opacity,
+                             axis=self.axis,
+                             idPrefix='{}-d'.format(len(self.anim.frames)),
+                             **self.draw_args)
 
     def sphere_fade_in(self):
         for t in self._smooth(0.4):
@@ -179,7 +179,8 @@ class AnimState:
         if not no_wait and final_wait:
             self.wait()
 
-def do_or_save_animation(name: str, save=False, fps=20, preview=True, style='sphere'):
+def do_or_save_animation(name: str, save=False, fps=20, preview=True,
+                         style='sphere'):
     def wrapper(func):
         if save == 'mp4':
             with draw.animate_video(f'{name}.mp4', draw_frame, fps=fps,
@@ -233,7 +234,8 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
 
     def draw_band(proj, trans, r_outer=1, r_inner=0.9, color='black', z_mul=1,
                   opacity=1, divs=4, d=d, **kwargs):
-        color = (color * divs)[:divs] if isinstance(color, list) else [color] * divs
+        color = ((color * divs)[:divs] if isinstance(color, list)
+                                       else [color] * divs)
         points = np.array([[-1, -1, 1, 1], [-1, 1, 1, -1]]).T
         sqr12 = 0.5**0.5
         overlap = np.pi/500 * (divs != 4)
@@ -311,29 +313,31 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
     else:
         # Draw inner bands
         # Darker colors: #34b, #a8a833, #7b2
-        draw_band(proj@inner_proj@xy, trans@inner_proj@xy, 0.8, 0.7, color=xycolors,
-                d=g)
+        draw_band(proj@inner_proj@xy, trans@inner_proj@xy, 0.8, 0.7,
+                  color=xycolors, d=g)
         draw_band(proj@inner_proj@yz, trans@inner_proj@yz, 0.8, 0.7,
-                color=yzcolors, divs=4, d=g)
-        draw_band(proj@inner_proj@zx, trans@inner_proj@zx, 0.8, 0.7, color=zxcolors,
-                divs=8//2, d=g)
+                  color=yzcolors, divs=4, d=g)
+        draw_band(proj@inner_proj@zx, trans@inner_proj@zx, 0.8, 0.7,
+                  color=zxcolors, divs=8//2, d=g)
         arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=4, orient='auto')
         arrow.append(draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='black',
                                 close=True))
         g.append(draw.Line(*inner_xy.p2(-0.65, 0, 0), *inner_xy.p2(0.6, 0, 0),
-                        stroke='black', stroke_width=0.015, marker_end=arrow),
+                           stroke='black', stroke_width=0.015,
+                           marker_end=arrow),
                 z=z_center)
         g.append(draw.Line(*inner_xy.p2(0, -0.65, 0), *inner_xy.p2(0, 0.6, 0),
-                        stroke='black', stroke_width=0.015, marker_end=arrow),
+                           stroke='black', stroke_width=0.015,
+                           marker_end=arrow),
                 z=z_center)
         g.append(draw.Line(*inner_xy.p2(0, 0, -0.65), *inner_xy.p2(0, 0, 0.6),
-                        stroke='black', stroke_width=0.015, marker_end=arrow),
+                           stroke='black', stroke_width=0.015,
+                           marker_end=arrow),
                 z=z_center)
         for pt, (x_off, y_off), elem in inner_labels:
             x, y = (proj@inner_proj).p2(*pt)
             g.append(draw.Use(elem, x+x_off, y+y_off), z=10000)
-            
-    
+
     elevation_lines = False
     if elevation_lines:
         for elevation in (*np.linspace(0, np.pi/2, 4, True)[1:-1],
@@ -428,7 +432,8 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
 
 def main(name, gates, mp4=False, fps=20, preview=False, style='sphere'):
     save = 'mp4' if mp4 else 'gif'
-    @do_or_save_animation(name, save=save, fps=fps, preview=preview, style=style)
+    @do_or_save_animation(name, save=save, fps=fps, preview=preview,
+                          style=style)
     def animate(state):
         state.apply_gate_list(gates)
     print(f'Saved "{name}.{save}" with gate sequence "{"".join(gates)}"')
