@@ -66,7 +66,7 @@ animate_bloch2 custom_hzy "custom;0;1;1;1;Hzy" "s,h,inv_s"
 
 Alternate drawing styles
 ```bash
-animate_bloch ~/Downloads/rx_gate_arrows --style arrows ry,0.666667 ry,0.666667 ry,0.666667
+animate_bloch ry_gate_arrows --style arrows ry,0.666667 ry,0.666667 ry,0.666667
 ```
 
 ![Ry(2π/3) gate](https://raw.githubusercontent.com/cduck/bloch_sphere/master/examples/ry_gate_arrows.gif)

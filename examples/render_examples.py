@@ -82,8 +82,8 @@ render_animation('hzh_x_compare',
                  w=w)
 
 print('Rendering ry_gate_arrows')
-#$ animate_bloch ~/Downloads/rx_gate_arrows --style arrows ry,0.666667 ry,0.666667 ry,0.666667
-do_or_save_animation('ry_gate_arrows_again', save='gif', fps=fps, preview=False,
+#$ animate_bloch ry_gate_arrows --style arrows ry,0.666667 ry,0.666667 ry,0.666667
+do_or_save_animation('ry_gate_arrows', save='gif', fps=fps, preview=False,
                      style='arrows'
         )(gate_sequence('ry;0.666667,ry;0.666667,ry;0.666667'))
 
