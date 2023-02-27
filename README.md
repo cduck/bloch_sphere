@@ -111,7 +111,7 @@ main('hzh_x', 'h,z,h'.split(','), 'x'.split(','),
 Or
 
 ```python
-import drawSvg as draw
+import drawsvg as draw
 import latextools
 from bloch_sphere.animate_bloch_compare import render_animation
 

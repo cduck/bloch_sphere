@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 import dataclasses
 import argparse
@@ -8,21 +8,21 @@ import re
 import sys
 import numpy as np
 
-import drawSvg as draw  # pip install drawSvg
+import drawsvg as draw  # pip install drawsvg
 from hyperbolic import euclid3d  # pip install hyperbolic
-from hyperbolic.euclid import shapes, intersection
+import hyperbolic.euclid as shapes
 
 
 @dataclasses.dataclass
 class AnimState:
-    anim: draw.Animation
+    anim: draw.FrameAnimation
     fps: float = 20
     speed: float = 1
     inner_proj: euclid3d.Projection = euclid3d.identity(3)
     inner_opacity: float = 1
     extra_opacity: float = 0
-    label: str = None
-    axis: List[float] = None
+    label: Optional[str] = None
+    axis: Optional[List[float]] = None
     draw_args: Dict[str, Any] = dataclasses.field(default_factory=dict)
 
     @classmethod
@@ -40,7 +40,7 @@ class AnimState:
                              inner_opacity=self.inner_opacity,
                              extra_opacity=self.extra_opacity,
                              axis=self.axis,
-                             idPrefix='{}-d'.format(len(self.anim.frames)),
+                             id_prefix='{}-d'.format(len(self.anim.frames)),
                              **self.draw_args)
 
     def sphere_fade_in(self):
@@ -187,28 +187,28 @@ def do_or_save_animation(name: str, save=False, fps=20, preview=True,
                          style='sphere'):
     def wrapper(func):
         if save == 'mp4':
-            with draw.animate_video(f'{name}.mp4', draw_frame, fps=fps,
-                                    jupyter=preview,
-                                   ) as anim:
+            with draw.frame_animate_video(
+                    f'{name}.mp4', draw_frame, fps=fps, jupyter=preview
+                    ) as anim:
                 state = AnimState(anim, fps=fps, draw_args={"style": style})
                 func(state)
         elif save == 'gif' or save is True:
-            with draw.animate_video(f'{name}.gif', draw_frame, duration=1/fps,
-                                    jupyter=preview,
-                                   ) as anim:
+            with draw.frame_animate_video(
+                    f'{name}.gif', draw_frame, duration=1/fps, jupyter=preview
+                    ) as anim:
                 state = AnimState(anim, fps=fps, draw_args={"style": style})
                 func(state)
         else:
-            with draw.animate_jupyter(draw_frame, delay=1/fps) as anim:
+            with draw.frame_animate_jupyter(draw_frame, delay=1/fps) as anim:
                 state = AnimState(anim, fps=fps, draw_args={"style": style})
                 func(state)
         return func
     return wrapper
 
-def draw_frame(*args, background='white', idPrefix='d', w=624, h=None,
+def draw_frame(*args, background='white', id_prefix='d', w=624, h=None,
                **kwargs):
-    d = draw.Drawing(5, 3, origin='center', idPrefix=idPrefix)
-    d.setRenderSize(w=w, h=h)
+    d = draw.Drawing(5, 3, origin='center', id_prefix=id_prefix)
+    d.set_render_size(w=w, h=h)
     if background:
         d.append(draw.Rectangle(-100, -100, 200, 200, fill=background))
 
@@ -225,7 +225,8 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
     spin = euclid3d.rotation(3, 0, 2, 2*np.pi/16/2*1.001)
     tilt = euclid3d.rotation(3, 1, 2, np.pi/8)
     trans = tilt @ spin @ euclid3d.axis_swap((1, 2, 0))
-    proj = euclid3d.perspective3d(np.pi/8, view_size=4) @ trans
+    flip_y = euclid3d.scaling([1, -1, 1])
+    proj = flip_y @ euclid3d.perspective3d(np.pi/8, view_size=4) @ trans
     zx = euclid3d.axis_swap((2, 0, 1))
     xy = euclid3d.identity(3)
     yz = euclid3d.axis_swap((1, 2, 0))
@@ -255,24 +256,24 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
                           **kwargs, opacity=opacity)
             z = trans.project_point(
                 (r_inner+r_outer)/2*start_end_points[i][2])[2]
-            e = shapes.EllipseArc.fromBoundingQuad(
+            e = shapes.EllipseArc.from_bounding_quad(
                 *proj.project_list(points*r_outer)[:, :2].flatten(),
                 *proj.project_list(start_end_points[i]*r_outer
                                   )[:, :2].flatten(),
             )
-            if e: e.drawToPath(p)
+            if e: e.draw_to_path(p)
             if r_inner > 0:
-                e = shapes.EllipseArc.fromBoundingQuad(
+                e = shapes.EllipseArc.from_bounding_quad(
                     *proj.project_list(points*r_inner)[:, :2].flatten(),
                     *proj.project_list(start_end_points[i]*r_inner
                                       )[:, :2].flatten(),
                 )
                 if e:
-                    e.reversed().drawToPath(p, includeL=True)
+                    e.reversed().draw_to_path(p, include_l=True)
             p.Z()
             d.append(p, z=z*z_mul)
             if False:
-                d.draw(shapes.EllipseArc.fromBoundingQuad(
+                d.draw(shapes.EllipseArc.from_bounding_quad(
                     *proj.project_list((r_outer+r_inner)/2*points
                                       )[:, :2].flatten(),
                     *proj.project_list((r_outer+r_inner)/2*start_end_points[i]
@@ -355,7 +356,7 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
 
     # Outer arrows and text
     arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=4, orient='auto')
-    arrow.append(draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='black',
+    arrow.append(draw.Lines(-0.1, 0.5, -0.1, -0.5, 0.9, 0, fill='black',
                             close=True))
     d.append(draw.Line(*proj_xy.p2(1, 0, 0), *proj_xy.p2(1.2, 0, 0),
                        stroke='black', stroke_width=0.02, marker_end=arrow),
@@ -380,12 +381,11 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
                        fill='black'), z=100)
     for pt, (x_off, y_off), elem in outer_labels:
         x, y = proj.p2(*pt)
-        d.append(draw.Use(elem, x+x_off, y+y_off), z=10000)
+        d.append(draw.Use(elem, x+x_off, y-y_off), z=10000)
 
     # Extra annotations
-    #label='', axis=None, rot_proj=None
     if label:
-        d.append(draw.Text([label], 0.4, -0.6, 1.2, center=True, fill='#c00',
+        d.append(draw.Text([label], 0.4, -0.6, -1.2, center=True, fill='#c00',
                            text_anchor='end',
                            opacity=extra_opacity))
     if axis:
@@ -394,9 +394,9 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
         axis_len = 1.18
         axis /= np.linalg.norm(axis)
         arrow = draw.Marker(-0.1, -0.5, 0.9, 0.5, scale=3, orient='auto')
-        arrow.append(draw.Lines(-0.1, -0.5, -0.1, 0.5, 0.9, 0, fill='#e00',
+        arrow.append(draw.Lines(-0.1, 0.5, -0.1, -0.5, 0.9, 0, fill='#e00',
                                 close=True))
-        z = 100#10 * proj_xy.project_point(axis*1)[2]
+        z = 100
         g.append(draw.Line(*proj_xy.p2(0, 0, 0), *proj_xy.p2(*axis*axis_len),
                            stroke='#e00', stroke_width=0.04, marker_end=arrow))
         d.append(g, z=z)
@@ -408,19 +408,19 @@ def draw_bloch_sphere(d, inner_proj=euclid3d.identity(3), label='', axis=None,
         start_end_points = np.array([[1, 0], [-1, 0], [0, 1]])
         p = draw.Path(fill='orange', fill_rule='nonzero', opacity=extra_opacity)
         z = 9 * (trans@rot_proj).project_point(start_end_points[2])[2]
-        e = shapes.EllipseArc.fromBoundingQuad(
+        e = shapes.EllipseArc.from_bounding_quad(
             *(proj@rot_proj).project_list(points*r_outer)[:, :2].flatten(),
             *(proj@rot_proj).project_list(start_end_points*r_outer
                                          )[:, :2].flatten(),
         )
-        if e: e.reversed().drawToPath(p)
-        e = shapes.EllipseArc.fromBoundingQuad(
+        if e: e.reversed().draw_to_path(p)
+        e = shapes.EllipseArc.from_bounding_quad(
             *(proj@rot_proj).project_list(points*r_inner)[:, :2].flatten(),
             *(proj@rot_proj).project_list(start_end_points*r_inner
                                          )[:, :2].flatten(),
         )
         if e:
-            e.drawToPath(p, includeL=True)
+            e.draw_to_path(p, include_l=True)
         sa = 2.5 * (r_outer-r_inner)
         xa = -(r_inner+r_outer)/2
         p.L(*(proj@rot_proj).p2(xa, 0.3*sa))

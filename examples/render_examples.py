@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import drawSvg as draw
+import drawsvg as draw
 import latextools
 from bloch_sphere.animate_bloch import do_or_save_animation, AnimState
 from bloch_sphere.animate_bloch_compare import render_animation
